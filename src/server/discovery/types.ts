@@ -15,5 +15,5 @@ export type CoverageRow = { location_id: string; level: string; location_name: s
 export type PortfolioRow = { id: string; title: string; description: string | null; completed_on: string | null; category_slug: string | null; media: { path: string; type: "image" | "video"; kind: "work" | "before" | "after" }[] };
 export type ReviewRow = { id: string; rating_overall: number; rating_quality: number | null; rating_communication: number | null; rating_punctuality: number | null; rating_value: number | null; body: string | null; created_at: string; reviewer_name: string; response_body: string | null; response_at: string | null };
 export type AvailabilityRow = { weekday: number; start_time: string; end_time: string };
-export type CategoryRow = { id: string; slug: string; name: string; description: string | null; icon: string | null; subcategories: { slug: string; name: string }[] };
+export type CategoryRow = { id: string; slug: string; name: string; description: string | null; icon: string | null; subcategories: { slug: string; name: string }[]; subcategoryIds: string[] };
 export type LocationOption = { id: string; name: string; level: string };

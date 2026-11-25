@@ -19,12 +19,12 @@ export async function searchProfessionals(params: DiscoveryParams): Promise<{ ro
 
 export async function listCategories(): Promise<CategoryRow[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("service_categories").select("id,slug,name,description,icon,service_subcategories(slug,name,sort_order,is_active)").eq("is_active", true).order("sort_order");
+  const { data, error } = await supabase.from("service_categories").select("id,slug,name,description,icon,service_subcategories(id,slug,name,sort_order,is_active)").eq("is_active", true).order("sort_order");
   if (error) fail("categories", error);
-  return (data ?? []).map((c) => ({
-    id: c.id, slug: c.slug, name: c.name, description: c.description, icon: c.icon,
-    subcategories: [...(c.service_subcategories ?? [])].filter((s) => s.is_active).sort((a, b) => a.sort_order - b.sort_order).map((s) => ({ slug: s.slug, name: s.name })),
-  }));
+  return (data ?? []).map((c) => {
+    const subs = [...(c.service_subcategories ?? [])].filter((s) => s.is_active).sort((a, b) => a.sort_order - b.sort_order);
+    return { id: c.id, slug: c.slug, name: c.name, description: c.description, icon: c.icon, subcategories: subs.map((s) => ({ slug: s.slug, name: s.name })), subcategoryIds: subs.map((s) => s.id) };
+  });
 }
 
 export async function categoryCounts(): Promise<Record<string, number>> {
