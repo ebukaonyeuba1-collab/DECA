@@ -4,7 +4,7 @@ import { HOME_FOR_ROLE, ROUTE_ROLES, type UserRole } from "@/lib/domain";
 
 /** Refreshes the session and gates role-specific areas. Layouts re-check (defence in depth). */
 export async function middleware(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const rule = ROUTE_ROLES.find((r) => request.nextUrl.pathname === r.prefix || request.nextUrl.pathname.startsWith(r.prefix + "/"));
   if (!url || !key) return rule ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
 

@@ -10,6 +10,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <div className="min-h-dvh">
       <header className="flex items-center justify-between border-b border-line bg-surface px-6 py-4">
         <span className="font-extrabold text-forest">DECA <span className="font-semibold text-ink-muted">| Administration</span></span>
+        <nav aria-label="Section" className="flex gap-4 text-sm font-bold"><a href="/admin" className="hover:text-forest-700">Overview</a><a href="/admin/verification" className="hover:text-forest-700">Verification</a></nav>
         <form action={signOut} className="flex items-center gap-3"><span className="hidden text-sm text-ink-muted sm:inline">{user.fullName || user.email}</span><Button size="sm" variant="secondary">Sign out</Button></form>
       </header>
       <main className="mx-auto max-w-4xl px-6 py-10">{children}</main>
