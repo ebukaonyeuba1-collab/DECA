@@ -100,3 +100,11 @@ docs/{ARCHITECTURE,SECURITY,TESTING,SETUP,DECISIONS}.md
 **Mobile.** Bottom navigation with a raised central "Request Service" action (currently opens Explore), dialog-based location picker, filters collapsible, touch-sized controls.
 
 **Dev data.** `supabase/seed.demo.sql` creates six clearly labelled `[DEMO]` professionals with no reviews, no ratings and no verification badges. It refuses to run unless `deca.allow_demo_seed` is set in the same session.
+
+## Stage 3: authentication and onboarding (migration 0014; see STAGE3.md)
+- **Auth flows** live in `src/server/auth` (actions, schemas) and `src/components/auth-form.tsx`. Sign-up passes role, location and consent as user metadata; the `handle_new_user` trigger (the only place roles are assigned at sign-up) limits the role to customer or professional, validates the location, and records consent and the privacy-policy acceptance.
+- **Onboarding** is seven step routes under `/workspace/onboarding/[step]`. Pure progress logic (`src/lib/onboarding-steps.ts`) is unit tested; data comes from one query (`src/server/onboarding/queries.ts`); writes are server actions (`actions.ts`) that validate with Zod, then write through the user's own Supabase session so RLS decides. Database errors are mapped to safe messages (our own `RAISE EXCEPTION` texts pass through; everything else is generic).
+- **Uploads:** `createDocumentRecord` (server: validates, creates the row, returns a path) then browser upload then `confirmDocumentUpload` (database checks the object exists). Public images (avatar, portfolio) upload to the user's own folder in `public-media` and are registered by actions that verify the path prefix.
+- **Server-only secrets:** `src/lib/env-server.ts` is the only module that reads the secret key; `server-only` makes importing it from client code a build error. Stage 3 never calls the service-role client.
+- **Policy acceptance:** versioned in `platform_settings.policies`; bumping the version forces re-acceptance before the next submission.
+- **Admin review (minimal):** `src/server/admin/verification.ts` wraps the existing `review_document` and `review_verification` functions; reviewers open files through 60-second signed URLs.

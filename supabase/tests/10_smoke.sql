@@ -32,6 +32,8 @@ begin
   docid := gen_random_uuid();
   perform t.try(p1,'authenticated', format('insert into public.professional_documents(id,professional_id,requirement_id,storage_path,file_name,review_status) values (%L,%L,%L,%L,''id.jpg'',''accepted'')', docid, pid1, req, p1||'/'||docid||'/id.jpg'));
   perform t.check('document review_status forced to pending', (select review_status::text from public.professional_documents where professional_id = pid1) = 'pending');
+  perform t.check('submit blocked until policies are accepted', t.fails(t.try(p1,'authenticated','select public.submit_verification_application()')));
+  perform t.try(p1,'authenticated','select public.accept_policies(array[''professional_terms'',''marketplace_rules'',''verification_policy'',''transaction_policy'',''privacy_policy'',''dispute_policy''])');
   perform t.check('submit blocked until the file is confirmed in storage', t.fails(t.try(p1,'authenticated','select public.submit_verification_application()')));
   insert into storage.objects(bucket_id, name, owner) values ('verification-documents', p1||'/'||docid||'/id.jpg', p1);
   perform t.check('owner confirms upload', t.try(p1,'authenticated', format('select public.confirm_document_upload(%L)', docid)) = 'ok');

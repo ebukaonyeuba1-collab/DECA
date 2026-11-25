@@ -36,7 +36,7 @@ npx playwright install && npm run test:e2e         # route guards, against a run
 Run `supabase/tests/05_test_helpers.sql`, `10_smoke.sql` and `20_hardening.sql` against your local Supabase DB as well (skip `00_local_stubs.sql`; never run it on Supabase). See [TESTING.md](TESTING.md) for what has and has not been verified.
 
 ## Storage
-Migrations `0008` and `0009` create the buckets `public-media`, `verification-documents`, `message-attachments`, `dispute-evidence` with policies. The verification bucket is limited to 10 MB and JPEG/PNG/PDF by migration `0009`; confirm the limits appear in the dashboard.
+Migrations `0008`, `0009` and `0014` create the buckets `public-media`, `verification-documents`, `message-attachments`, `dispute-evidence` with policies. The verification bucket is limited to 10 MB and JPEG/PNG/PDF by migration `0009`; confirm the limits appear in the dashboard.
 
 ## Deploy (Vercel)
 1. Create a hosted Supabase project; run `supabase link` then `supabase db push`; run `seed.sql` once.

@@ -48,3 +48,13 @@ Commission and customer fee values; which documents are mandatory for which trad
 - Location selection stored in a cookie (no account needed); signed-in preference storage can come with customer profiles.
 - Profile contact actions are real links for visitors and honest "coming soon" states for signed-in customers until Stage 6.
 - Not included: sitemap and robots, ratings breakdown chart, review pagination beyond the latest ten, portfolio lightbox, geolocation/maps, photography.
+
+## Stage 3 decisions
+- Added one table (`policy_acceptances`); everything else reuses the Stage 1 schema. New migration, no edits to earlier ones except none.
+- Used the user's own session for everything. No service-role code path exists in Stage 3, which removes the largest class of mistakes.
+- Accept both new (`publishable`/`secret`) and legacy (`anon`/`service_role`) Supabase key variable names.
+- Data minimisation: no date of birth or home address; no bank details until the payment provider exists (Stage 7); phone is stored but unverified.
+- Onboarding steps save individually (the spec's autosave intent) and later steps are blocked until a profile exists.
+- Policy acceptance is recorded per policy and version; texts are drafts pending counsel.
+- A minimal admin review screen was included so the verification loop can be tested end to end; Stage 8 replaces it with the full dashboard.
+- Rejected approach: letting administrators review through SQL, because the review functions rely on the signed-in admin's identity.

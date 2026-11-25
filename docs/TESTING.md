@@ -13,7 +13,7 @@ Everything below is reproducible. Results are from the environment where this bu
 | All app checks | `npm run verify` | |
 | Route guards (E2E) | `npx playwright install && npm run test:e2e` | running app, Supabase |
 
-`scripts/test-db.sh` drops and recreates the database, applies `supabase/tests/00_local_stubs.sql` (fake `auth` and `storage` schemas, plain Postgres only), all 13 migrations in order, `seed.sql` twice (idempotency), then the test files and a demo-seed check. It exits non-zero on any failure.
+`scripts/test-db.sh` drops and recreates the database, applies `supabase/tests/00_local_stubs.sql` (fake `auth` and `storage` schemas, plain Postgres only), all 14 migrations in order, `seed.sql` twice (idempotency), then the test files and a demo-seed check. It exits non-zero on any failure.
 
 ## Results actually executed
 | Check | Result |
@@ -42,7 +42,7 @@ Each check prints `NOTICE: PASS|FAIL <label>`; failures are also listed at the e
 ## Stage 2 results (executed)
 | Check | Result |
 |---|---|
-| 13 migrations apply from empty; seed twice | Pass |
+| 14 migrations apply from empty; seed twice | Pass |
 | `10_smoke` 74, `20_hardening` 85, `30_discovery` 30 | 189 of 189 |
 | Demo seed: refused without guard; idempotent with it; 6 public demo professionals, 0 reviews, 0 badges | Pass |
 | `tsc --noEmit` | Clean |
@@ -59,3 +59,23 @@ Stage 2 database checks cover: only approved and listed professionals appear; ca
 - The location dialog and filters were not exercised with JavaScript running.
 - Behaviour with a down database: each page takes about 7 seconds to show its error state (client retries). Acceptable for dev; consider request timeouts before launch.
 - Playwright tests exist for route guards only; no Stage 2 end-to-end tests yet.
+
+## Stage 3 results (executed in the build environment)
+| Check | Result |
+|---|---|
+| 14 migrations apply from empty; seed twice; demo seed guard | Pass |
+| Database suites: smoke 75, hardening 85, discovery 30, onboarding 26 | 216 of 216 |
+| `90_remote_readonly_checks.sql` syntax and logic on the test database | Runs; 19 of 20 true (the 20th, demo data, is expected false there) |
+| `tsc --noEmit` | Clean |
+| Vitest | 50 tests, 9 files, passing (adds: redirect safety, slugs, uploads, naira parsing, schemas, onboarding progress, client/server safety guards) |
+| `next build` | Succeeds; 22 routes |
+| Canary build: secret values and secret variable names in browser bundle | 0 and 0; publishable key inlined |
+| Running build without Supabase: auth pages 200; `/account`, `/workspace`, `/admin`, admin pages redirect to sign-in with a safe `next`; `/reset-password` without a session redirects; unknown policy 404; 0 unhandled errors | Pass |
+
+Findings fixed during Stage 3 testing: a new table needed explicit grants (it would have worked on Supabase only through default privileges); a `javascript:` website URL passed validation (now http/https only); secret variable names sat in a shared module (moved to a server-only module); an email-link error message was misleading for already-confirmed users.
+
+## Stage 3 NOT verified
+- **No test touched a real Supabase project.** Sign-up, email confirmation, sign-in, password reset, session cookies, direct browser uploads, signed URLs, and the Realtime/PostgREST exposure of the new functions are untested. The database logic behind them is tested.
+- No page was rendered with a signed-in session; forms were not exercised in a browser; accessibility and visual design not inspected.
+- The storage tests used a stand-in `storage` schema; the read-only script and acceptance scenarios in STAGE3.md exist to close this gap on the real project.
+- Playwright tests cover route guards only.

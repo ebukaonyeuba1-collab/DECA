@@ -41,6 +41,7 @@ begin
   perform t.check('db: removed document row and file are both retained', (select count(*) from public.professional_documents where id = docB) = 1 and (select count(*) from storage.objects where name = pb) = 1);
   perform t.check('db: removal cannot be undone by the owner', t.fails(t.try(hp,'authenticated', format('update public.professional_documents set deleted_at = null where id = %L', docB))));
 
+  perform t.try(hp,'authenticated','select public.accept_policies(array[''professional_terms'',''marketplace_rules'',''verification_policy'',''transaction_policy'',''privacy_policy'',''dispute_policy''])');
   perform t.check('owner submits verification', t.try(hp,'authenticated','select public.submit_verification_application()') = 'ok');
   select id into aid from public.verification_applications where professional_id = pid;
   perform t.check('locked: owner cannot soft-remove after submission', t.fails(t.try(hp,'authenticated', format('update public.professional_documents set deleted_at = now() where id = %L', docA))));
