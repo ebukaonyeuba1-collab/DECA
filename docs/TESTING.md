@@ -79,3 +79,30 @@ Findings fixed during Stage 3 testing: a new table needed explicit grants (it wo
 - No page was rendered with a signed-in session; forms were not exercised in a browser; accessibility and visual design not inspected.
 - The storage tests used a stand-in `storage` schema; the read-only script and acceptance scenarios in STAGE3.md exist to close this gap on the real project.
 - Playwright tests cover route guards only.
+
+## Admin verification and professional management (executed)
+| Check | Result |
+|---|---|
+| 15 migrations apply from empty; seed twice | Pass |
+| Database suites: smoke 75, hardening 85, discovery 30, onboarding 26, admin 48 | 264 of 264 |
+| Admin suite covers | refusal of customers, professionals and anonymous visitors; pending, approved, rejected, suspended, not-started and all views; ordering; reasons and reviewer on rejected; search by name, business and email; wildcard and hostile text; category, location (base, coverage and state hierarchy), status filters and their combination; paging; counts; reject and approve moving between views; no records deleted; decision history with administrator id, decision, reason and time; reopening keeps earlier decisions; latest-decision display; removed documents visible to admins only; other users blocked |
+| `tsc --noEmit` | Clean |
+| Vitest | 55 tests, 10 files, passing (adds filter parsing, hostile input, link building, history wording) |
+| `next build` | Succeeds; admin routes dynamic |
+| Admin routes without a session | Redirect; invalid ids and hostile filters handled |
+
+Not verified: the pages against a real Supabase project, signed-URL opening with a real admin session, and visual layout on devices.
+
+## Professional workspace (executed)
+| Check | Result |
+|---|---|
+| 16 migrations apply from empty; seed twice; update file run twice | Pass |
+| Database suites: smoke 75, hardening 85, discovery 30, onboarding 26, admin 49, workspace 39 | 304 of 304 |
+| Workspace suite covers | dashboard figures (enquiries, drafts, pending quotes, upcoming, active, completed, unread messages, gross, commission, payouts, status breakdown) computed from real workflow data; isolation between professionals; customers and anonymous visitors get nothing; masked customer names with no contact details; private notes (not for strangers, invisible to other professionals, customers and administrators); job progress allowed and forbidden steps; progress notes only while a job is open; sensitive category and business-name changes returning an approved profile to review, unlisting it and recording history; ordinary edits keeping approval; professional unable to restore approval |
+| `tsc --noEmit` | Clean |
+| Vitest | 64 tests, 11 files, passing (adds navigation, funnel, earnings, job actions, sensitive-change and completion logic) |
+| `next build` | Succeeds; 17 workspace routes |
+| Canary build: secret values and names in browser files | 0 and 0 |
+| Workspace routes without a session | Redirect to sign-in with the right `next` |
+
+Not verified: any page against a real Supabase project, forms in a browser, mobile layout and accessibility.

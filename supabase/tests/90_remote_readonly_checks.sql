@@ -1,8 +1,18 @@
 -- READ-ONLY checks for your REAL Supabase project. Paste into the Supabase SQL Editor and run.
 -- Changes nothing. Every row should show ok = true. Anything false is a deployment problem to fix before real users.
 select * from (
-  select 'migrations applied: 14 files recorded' as check_name,
-         (select count(*) from supabase_migrations.schema_migrations) >= 14 as ok
+  select 'latest migration applied (accept_policies exists)' as check_name,
+         exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'accept_policies') as ok
+  union all select 'admin management functions exist (migration 0015) and are not callable by anon',
+         exists (select 1 from pg_proc where proname = 'admin_list_professionals' and pronamespace = 'public'::regnamespace)
+         and not has_function_privilege('anon','public.admin_list_professionals(text,public.verification_status,text,text,uuid,int,int)','execute')
+         and not has_function_privilege('anon','public.admin_verification_counts()','execute')
+  union all select 'workspace functions exist (migration 0016) and are not callable by anon',
+         exists (select 1 from pg_proc where proname = 'professional_dashboard' and pronamespace = 'public'::regnamespace)
+         and not has_function_privilege('anon','public.professional_dashboard()','execute') and not has_function_privilege('anon','public.professional_customers()','execute')
+  union all select 'customer notes are private (no admin or anon access)',
+         not has_table_privilege('anon','public.professional_customer_notes','select')
+         and not exists (select 1 from pg_policies where tablename = 'professional_customer_notes' and policyname <> 'notes_owner')
   union all select 'RLS enabled on every public table',
          not exists (select 1 from pg_tables t where t.schemaname = 'public' and not t.rowsecurity)
   union all select 'tables exist: policy_acceptances, professional_documents, verification_events',

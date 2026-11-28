@@ -108,3 +108,9 @@ docs/{ARCHITECTURE,SECURITY,TESTING,SETUP,DECISIONS}.md
 - **Server-only secrets:** `src/lib/env-server.ts` is the only module that reads the secret key; `server-only` makes importing it from client code a build error. Stage 3 never calls the service-role client.
 - **Policy acceptance:** versioned in `platform_settings.policies`; bumping the version forces re-acceptance before the next submission.
 - **Admin review (minimal):** `src/server/admin/verification.ts` wraps the existing `review_document` and `review_verification` functions; reviewers open files through 60-second signed URLs.
+
+## Admin verification and professional management
+See docs/ADMIN_VERIFICATION.md. Pages: `src/app/(admin)/admin/verification` (views, search, filters) and `[id]` (detail). Components: `src/components/admin/*`. Data: `src/server/admin/queries.ts` (one RPC for the list, one for counts, separate reads for detail). Filter parsing and history wording: `src/lib/admin-verification.ts` (unit tested). Migration 0015.
+
+## Stage 4: professional workspace
+See docs/WORKSPACE.md. Routes `src/app/(professional)/workspace/*`; navigation `src/components/workspace/nav.tsx`; reads in `src/server/workspace/queries.ts`; writes in `src/server/workspace/actions.ts` (all through the user's own session, so RLS applies); pure logic in `src/lib/workspace.ts` (unit tested). Onboarding step components are reused in `manage` mode. Migration 0016.

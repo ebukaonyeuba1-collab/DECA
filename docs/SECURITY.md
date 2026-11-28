@@ -41,3 +41,7 @@ Status: Stage 1 foundation after review. Controls below are implemented in migra
 - **NDPA.** Consent text, retention periods and erasure procedures need legal review before real users are onboarded.
 - **Not exercised against real Supabase Auth:** email confirmation, password reset, session refresh and signed URLs have not run against a live project. See STAGE3.md acceptance scenarios.
 - **Email-link flow** is PKCE based; cross-device links can fail (see STAGE3.md).
+
+- **Admin listing:** `admin_list_professionals` and `admin_verification_counts` refuse non-administrators (tested for customers, professionals and anonymous). Admin reads of private contact details and documents are not yet access-logged (Stage 8).
+
+- **Workspace:** dashboard and customer functions never expose other professionals' data or customers' contact details (tested). Customer notes are private to their author. Sensitive profile changes after approval unlist the profile until an administrator decides again (tested).

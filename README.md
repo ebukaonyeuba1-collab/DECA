@@ -10,3 +10,5 @@ Security and verification: [docs/SECURITY.md](docs/SECURITY.md), [docs/TESTING.m
 Stage 2 (public marketplace) is in `src/app/(public)`; see docs/ARCHITECTURE.md.
 
 Stage 3 (authentication and onboarding): docs/STAGE3.md has deployment steps, an acceptance script for your real Supabase project, and the production checklist.
+
+Stage 4 (professional workspace): docs/WORKSPACE.md.

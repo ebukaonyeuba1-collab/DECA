@@ -58,3 +58,18 @@ Commission and customer fee values; which documents are mandatory for which trad
 - Policy acceptance is recorded per policy and version; texts are drafts pending counsel.
 - A minimal admin review screen was included so the verification loop can be tested end to end; Stage 8 replaces it with the full dashboard.
 - Rejected approach: letting administrators review through SQL, because the review functions rely on the signed-in admin's identity.
+
+## Admin verification decisions
+- Reused `professional_profiles.verification_status` and `verification_events` instead of adding history or status tables.
+- One migration with two read-only functions, because hierarchical location search across tables cannot be done safely with client filters.
+- Fixed a display flaw: an application shows only the latest decision's reason; history keeps all of them.
+- The default view stays Pending so the existing queue behaves as before.
+- Admins can read private contact details; the page labels them private. Access logging for admin reads of files and contact data is still a Stage 8 item.
+
+## Stage 4 decisions
+- Added one table (private customer notes) and two read-only functions; everything else reuses existing tables and RLS.
+- Dashboard is SECURITY INVOKER so the database, not application code, limits it to the caller's data.
+- Sensitive changes after approval return the profile to review (unlisting it) rather than being blocked or silently allowed; ordinary edits stay instant.
+- Professionals may move jobs forward but cannot complete, refund or dispute them; the database enforces this, the UI mirrors it.
+- Quotation builder, replying to enquiries and messaging stay in Stage 6 so they are built together with the customer side.
+- Analytics shows only what is measurable today; unmeasured metrics are omitted, not estimated.

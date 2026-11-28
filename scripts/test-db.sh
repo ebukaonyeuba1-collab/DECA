@@ -21,6 +21,8 @@ echo "== smoke (RLS + workflows)"; check supabase/tests/10_smoke.sql
 echo "== hardening (evidence, storage, public views, payments)"; check supabase/tests/20_hardening.sql
 echo "== discovery (Stage 2 search)"; check supabase/tests/30_discovery.sql
 echo "== onboarding (Stage 3)"; check supabase/tests/40_onboarding.sql
+echo "== admin verification and professional management"; check supabase/tests/50_admin_verification.sql
+echo "== professional workspace (Stage 4)"; check supabase/tests/60_workspace.sql
 echo "== demo seed: refused without the guard, idempotent with it, no fake reviews/badges"
 if $ADMIN -q -v ON_ERROR_STOP=1 -d "$DB" -f supabase/seed.demo.sql >/dev/null 2>&1; then echo "FAIL demo seed ran without guard"; exit 1; else echo "guard OK (refused)"; fi
 for i in 1 2; do $ADMIN -q -v ON_ERROR_STOP=1 -d "$DB" -c "set deca.allow_demo_seed = 'on'" -f supabase/seed.demo.sql; done
