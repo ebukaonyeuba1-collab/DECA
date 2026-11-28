@@ -9,6 +9,7 @@ import type { VerificationStatus } from "@/lib/domain";
 import { readyToSubmit } from "@/lib/onboarding-steps";
 import type { OnboardingData } from "@/server/onboarding/queries";
 import type { CategoryRow, LocationOption } from "@/server/discovery/types";
+import { updateProfessionalProfile } from "@/server/workspace/actions";
 import { acceptAndSubmit, addCoverage, addDayOff, addService, createPortfolioItem, removeCoverage, removeDayOff, removeDocument, removePortfolioItem, removeService, saveAvailability, saveBusiness, saveProfessionalProfile } from "@/server/onboarding/actions";
 import { ActionForm } from "./action-form";
 import { LocationSelect } from "./location-select";
@@ -22,14 +23,15 @@ const Next = ({ to, label = "Continue" }: { to: string; label?: string }) => <Li
 const Remove = ({ action, id, label }: { action: Parameters<typeof ActionForm>[0]["action"]; id: string; label: string }) => <ActionForm action={action} submitLabel="Remove" secondary className="inline-flex flex-col items-end gap-1"><input type="hidden" name="id" value={id} /><span className="sr-only">{label}</span></ActionForm>;
 const EDITABLE = ["not_started", "incomplete", "additional_information_required"];
 
-export function ProfileStep({ d, categories, states, userId, businessBanner }: { d: OnboardingData; categories: CategoryRow[]; states: LocationOption[]; userId: string; businessBanner: boolean }) {
+export function ProfileStep({ d, categories, states, userId, businessBanner, manage }: { d: OnboardingData; categories: CategoryRow[]; states: LocationOption[]; userId: string; businessBanner: boolean; manage?: boolean }) {
   const p = d.pro; const b = d.business;
   return (
     <section className="space-y-10">
       <div>
         <H sub="This is what customers see first. Your phone number and email are never shown publicly.">Your profile</H>
         <div className="mb-6 flex items-center gap-4"><Avatar name={p?.display_name ?? d.profile?.full_name ?? "You"} path={d.profile?.avatar_path ?? null} className="h-20 w-20 text-2xl" /><PublicImageUpload userId={userId} folder="avatar" label={d.profile?.avatar_path ? "Change photo" : "Add profile photo"} onDone="avatar" /></div>
-        <ActionForm action={saveProfessionalProfile} submitLabel="Save and continue">
+        {manage && d.pro?.verification_status === "approved" && <p role="note" className="mb-4 rounded-2xl bg-warning/10 p-3 text-sm font-semibold">You are approved. Changing your <b>account type</b> or <b>main category</b> sends your profile back to DECA for review, and it is hidden from search until a reviewer decides. Other edits apply straight away.</p>}
+        <ActionForm action={manage ? updateProfessionalProfile : saveProfessionalProfile} submitLabel={manage ? "Save changes" : "Save and continue"}>
           <fieldset className="grid gap-3 sm:grid-cols-2"><legend className={lab}>Account type</legend>
             {[["individual", "Individual professional"], ["business", "Registered business"]].map(([v, l]) => <label key={v} className="flex cursor-pointer items-center gap-2 rounded-2xl border-2 border-line bg-surface p-3 font-bold has-[:checked]:border-forest"><input type="radio" name="accountType" value={v} defaultChecked={(p?.account_type ?? "individual") === v} className="accent-forest" />{l}</label>)}</fieldset>
           <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="fullName" className={lab}>Full legal name</label><input id="fullName" name="fullName" required defaultValue={d.profile?.full_name} className={inp} autoComplete="name" /></div><div><label htmlFor="phone" className={lab}>Phone number</label><input id="phone" name="phone" type="tel" required defaultValue={d.profile?.phone ?? ""} className={inp} placeholder="+2348012345678" autoComplete="tel" /></div></div>
@@ -53,23 +55,23 @@ export function ProfileStep({ d, categories, states, userId, businessBanner }: {
             <div><label htmlFor="ba" className={lab}>Business address (optional, private)</label><input id="ba" name="addressLine" maxLength={200} defaultValue={String(b?.address_line ?? "")} className={inp} /></div>
           </ActionForm>
         </div>)}
-      {p && <Next to="/workspace/onboarding/services" />}
+      {p && !manage && <Next to="/workspace/onboarding/services" />}
     </section>
   );
 }
 
-export function ServicesStep({ d, categories }: { d: OnboardingData; categories: CategoryRow[] }) {
+export function ServicesStep({ d, categories, manage }: { d: OnboardingData; categories: CategoryRow[]; manage?: boolean }) {
   return (
     <section className="space-y-8">
       <H sub="List what you do. Prices are indicative; the final amount is agreed in a quotation. You can add more later.">Services and pricing</H>
-      {d.services.length > 0 && <ul className="divide-y divide-line rounded-card bg-surface px-5 shadow-soft">{d.services.map((s) => <li key={s.id} className="flex items-center justify-between gap-4 py-4"><div><p className="font-extrabold">{s.name}</p><p className="text-sm text-forest">{priceLabel(s.pricing_type as PricingType, s.price_minor)}</p></div><Remove action={removeService} id={s.id} label={`Remove ${s.name}`} /></li>)}</ul>}
+      {d.services.length > 0 && <ul className="divide-y divide-line rounded-card bg-surface px-5 shadow-soft">{d.services.map((s) => <li key={s.id} className="flex items-center justify-between gap-4 py-4"><div><p className="font-extrabold">{s.name}</p><p className="text-sm text-forest">{priceLabel(s.pricing_type as PricingType, s.price_minor)}</p></div><span className="flex items-center gap-3">{manage && <Link href={`/workspace/services/${s.id}`} className="font-bold text-forest underline">Edit</Link>}<Remove action={removeService} id={s.id} label={`Remove ${s.name}`} /></span></li>)}</ul>}
       <div className="rounded-card bg-mint-50 p-5 ring-1 ring-line"><h3 className="mb-4 font-extrabold">Add a service</h3><ActionForm action={addService} submitLabel="Add service"><ServiceFields categories={categories} defaultCategoryId={d.pro?.primary_category_id} /></ActionForm></div>
-      <div className="flex gap-3"><Next to="/workspace/onboarding/profile" label="Back" />{d.services.length > 0 && <Next to="/workspace/onboarding/coverage" />}</div>
+      {!manage && <div className="flex gap-3"><Next to="/workspace/onboarding/profile" label="Back" />{d.services.length > 0 && <Next to="/workspace/onboarding/coverage" />}</div>}
     </section>
   );
 }
 
-export function CoverageStep({ d, states }: { d: OnboardingData; states: LocationOption[] }) {
+export function CoverageStep({ d, states, manage }: { d: OnboardingData; states: LocationOption[]; manage?: boolean }) {
   return (
     <section className="space-y-8">
       <H sub="Add every area you serve: a whole state, a city or a neighbourhood. Customers searching those areas will find you.">Where you work</H>
@@ -78,12 +80,12 @@ export function CoverageStep({ d, states }: { d: OnboardingData; states: Locatio
         <ActionForm action={addCoverage} submitLabel="Add area"><LocationSelect states={states} name="locationId" label="Area" required />
           <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="travel" className="h-5 w-5 accent-forest" />I travel to customers here</label>
           <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="remote" className="h-5 w-5 accent-forest" />I can also help remotely</label></ActionForm></div>
-      <div className="flex gap-3"><Next to="/workspace/onboarding/services" label="Back" />{d.coverage.length > 0 && <Next to="/workspace/onboarding/portfolio" />}</div>
+      {!manage && <div className="flex gap-3"><Next to="/workspace/onboarding/services" label="Back" />{d.coverage.length > 0 && <Next to="/workspace/onboarding/portfolio" />}</div>}
     </section>
   );
 }
 
-export function PortfolioStep({ d, userId }: { d: OnboardingData; userId: string }) {
+export function PortfolioStep({ d, userId, manage }: { d: OnboardingData; userId: string; manage?: boolean }) {
   return (
     <section className="space-y-8">
       <H sub="Optional but strongly recommended. Real photos of your own work build trust. JPG, PNG or WebP, up to 5 MB each.">Portfolio</H>
@@ -99,13 +101,13 @@ export function PortfolioStep({ d, userId }: { d: OnboardingData; userId: string
           <div><label htmlFor="pd" className={lab}>What did you do? (optional)</label><textarea id="pd" name="description" maxLength={500} rows={2} className={`${inp} h-auto py-3`} /></div>
           <div><label htmlFor="pc" className={lab}>Completed on (optional)</label><input id="pc" name="completedOn" type="date" className={inp} /></div>
         </ActionForm></div>
-      <div className="flex gap-3"><Next to="/workspace/onboarding/coverage" label="Back" /><Next to="/workspace/onboarding/availability" label={d.portfolio.length ? "Continue" : "Skip for now"} /></div>
+      {!manage && <div className="flex gap-3"><Next to="/workspace/onboarding/coverage" label="Back" /><Next to="/workspace/onboarding/availability" label={d.portfolio.length ? "Continue" : "Skip for now"} /></div>}
     </section>
   );
 }
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-export function AvailabilityStep({ d }: { d: OnboardingData }) {
+export function AvailabilityStep({ d, manage }: { d: OnboardingData; manage?: boolean }) {
   const by = new Map(d.availability.map((a) => [a.weekday, a]));
   return (
     <section className="space-y-8">
@@ -119,7 +121,7 @@ export function AvailabilityStep({ d }: { d: OnboardingData }) {
       <div><h3 className="mb-3 font-extrabold">Days off</h3>
         {d.exceptions.length > 0 && <ul className="mb-4 divide-y divide-line rounded-card bg-surface px-5 shadow-soft">{d.exceptions.map((e) => <li key={e.id} className="flex items-center justify-between gap-4 py-3"><span>{e.starts_on}{e.ends_on !== e.starts_on ? ` to ${e.ends_on}` : ""}{e.reason ? ` · ${e.reason}` : ""}</span><Remove action={removeDayOff} id={e.id} label="Remove day off" /></li>)}</ul>}
         <ActionForm action={addDayOff} submitLabel="Add days off" secondary><div className="grid gap-4 sm:grid-cols-3"><div><label htmlFor="do1" className={lab}>From</label><input id="do1" name="startsOn" type="date" required className={inp} /></div><div><label htmlFor="do2" className={lab}>To</label><input id="do2" name="endsOn" type="date" required className={inp} /></div><div><label htmlFor="do3" className={lab}>Reason (optional)</label><input id="do3" name="reason" maxLength={100} className={inp} /></div></div></ActionForm></div>
-      <div className="flex gap-3"><Next to="/workspace/onboarding/portfolio" label="Back" /><Next to="/workspace/onboarding/documents" /></div>
+      {!manage && <div className="flex gap-3"><Next to="/workspace/onboarding/portfolio" label="Back" /><Next to="/workspace/onboarding/documents" /></div>}
     </section>
   );
 }
